@@ -10,11 +10,11 @@
 # crontab -e
 # 43 6 * * * certbot renew --post-hook "systemctl reload nginx"
 # Créez un nouveau fichier :
-# sudo nano install_odoo_ubuntu.sh
+# sudo nano install.sh
 # Placez ce contenu dedans et rendez ensuite le fichier exécutable :
-# sudo chmod +x install_odoo_ubuntu.sh
+# sudo chmod +x install.sh
 # Exécutez le script pour installer Odoo :
-# sudo ./install_odoo_ubuntu.sh
+# sudo ./install.sh
 ################################################################################
 
 # Demander à l'utilisateur d'entrer les paramètres
