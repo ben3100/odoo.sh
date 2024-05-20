@@ -24,7 +24,7 @@ read -p "Entrez le nom du site web pour la configuration Nginx (ex: example.com)
 read -p "Entrez la version d'Odoo à installer (ex: 16.0, 17.0): " ENTREPRISE_VERSION
 read -p "Voulez-vous installer la version entreprise d'Odoo ? (True/False): " INSTALL_ENTREPRISE
 
-if [ "$INSTALL_ENTREPRISE" = "True" ]; then
+if [ "$INSTALL_ENTREPRISE" = "True" ]; alors
     read -p "Entrez la version entreprise d'Odoo à installer (14 ou 15): " ENTREPRISE_VERSION_SPECIFIC
 fi
 
@@ -144,7 +144,7 @@ logfile = /var/log/${ENTREPRISE_USER}/${ENTREPRISE_CONFIG}.log\n
 logrotate = True\n
 xmlrpc_interface = 127.0.0.1 \n
 netrpc_interface = 127.0.0.1 \n
-dbfilter = ^0$\n
+dbfilter = .*\n
 proxy_mode = True\n
 workers = 4\n
 max_cron_threads = 2\n' > /etc/${ENTREPRISE_CONFIG}.conf"
@@ -233,6 +233,8 @@ sudo ufw allow 'Nginx Full'
 sudo ufw allow 8069/tcp
 sudo ufw allow 8072/tcp
 sudo ufw --force enable
+sudo ufw allow 6010/tcp
+sudo ufw allow 22/tcp
 
 echo "-----------------------------------------------------------"
 echo "Installation complète de Odoo"
