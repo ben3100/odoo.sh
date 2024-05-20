@@ -26,7 +26,8 @@ Ce script permet d'installer Odoo sur un serveur Ubuntu 22.04 LTS. Il peut égal
 - **Option d'installation de la version entreprise d'Odoo** (versions 14 ou 15)
 - **Configuration de Nginx comme proxy inverse**
 - **Configuration de SSL avec Certbot**
-
+- **Configuration du pare-feu avec UFW**
+  
 ## Utilisation :
 
 ### Étape 1: Télécharger le script
