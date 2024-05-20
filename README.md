@@ -1,4 +1,5 @@
-# Script d'installation d'Odoo sur Ubuntu 22.04 LTS : 
+
+# Script d'installation d'Odoo sur Ubuntu 22.04 LTS
 
 ## Auteur :
 - [Ben Belaouedj](https://fr.linkedin.com/in/ben-belaouedj)
@@ -32,23 +33,29 @@ Ce script permet d'installer Odoo sur un serveur Ubuntu 22.04 LTS. Il peut égal
 
 Clonez le dépôt contenant le script :
 
-```sh
+\`\`\`sh
 git clone https://github.com/ben3100/odoo.sh.git
 cd odoo.sh
+\`\`\`
 
 ### Étape 2: Rendre le script exécutable
+
 Rendez le script exécutable :
 
-```sh
+\`\`\`sh
 sudo chmod +x install.sh
+\`\`\`
 
 ### Étape 3: Exécuter le script
+
 Lancez le script pour installer Odoo :
 
-```sh
-sudo ./install_odoo_ubuntu.sh
+\`\`\`sh
+sudo ./install.sh
+\`\`\`
 
-Étape 4: Suivre les instructions
+### Étape 4: Suivre les instructions
+
 Le script vous demandera de fournir plusieurs informations :
 
 - **Nom d'utilisateur système pour Odoo (par exemple, odoo)**
@@ -59,9 +66,34 @@ Le script vous demandera de fournir plusieurs informations :
 - **Si vous choisissez d'installer la version entreprise, le script vous demandera de spécifier la version entreprise (14 ou 15).**
 
 ### Notes
-Si vous choisissez de générer un mot de passe admin aléatoire, le script le fera automatiquement.
-Le script configure Nginx pour agir comme un proxy inverse et installe également un certificat SSL via Certbot si l'option est activée.
 
+- Si vous choisissez de générer un mot de passe admin aléatoire, le script le fera automatiquement.
+- Le script configure Nginx pour agir comme un proxy inverse et installe également un certificat SSL via Certbot si l'option est activée.
 
+## Vérification
 
+Pour vérifier que le service Odoo est en cours d'exécution, utilisez la commande suivante :
 
+\`\`\`sh
+sudo systemctl status odoo
+\`\`\`
+
+## Accès à Odoo
+
+Vous pouvez accéder à votre instance Odoo via l'adresse IP de votre serveur ou le nom de domaine que vous avez configuré :
+
+\`\`\`
+http://example.com
+\`\`\`
+
+## Informations supplémentaires
+
+- **Port par défaut d'Odoo** : 8069
+- **Fichier de configuration d'Odoo** : \`/etc/odoo-server.conf\`
+- **Répertoire des addons personnalisés** : \`/opt/odoo/custom/addons\`
+
+## Contact
+
+Pour toute question ou problème, veuillez contacter les auteurs via LinkedIn :
+
+- [Ben Belaouedj](https://fr.linkedin.com/in/ben-belaouedj)
