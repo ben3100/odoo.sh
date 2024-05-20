@@ -1,5 +1,4 @@
 #!/bin/bash
-
 ################################################################################
 # Script pour installer Odoo sur Ubuntu 22.04 LTS (peut également être utilisé pour d'autres versions)
 # Auteur : https://fr.linkedin.com/in/ben-belaouedj
