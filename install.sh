@@ -1,4 +1,5 @@
 #!/bin/bash
+
 ################################################################################
 # Script pour installer Odoo sur Ubuntu 22.04 LTS (peut également être utilisé pour d'autres versions)
 # Auteur : https://fr.linkedin.com/in/ben-belaouedj
@@ -99,9 +100,9 @@ echo -e "\n---- Installation de wkhtmltopdf et placement des raccourcis au bon e
 else
   echo "Wkhtmltopdf n'est pas installé en raison du choix de l'utilisateur !"
 fi
-
+  
 echo -e "\n============== Création de l'utilisateur système ODOO ========================"
-sudo adduser --system --quiet --shell=/bin/bash --home=$ENTREPRISE_HOME --gecos 'ODOO' --group $ENTREPRISE_USER
+sudo adduser --system --quiet --shell=/bin/bash --home=$ENTREPRISE_HOME --gecos 'odoo' --group $ENTREPRISE_USER
 
 # Ajouter l'utilisateur au groupe sudo
 sudo adduser $ENTREPRISE_USER sudo
@@ -113,7 +114,7 @@ sudo chown -R $ENTREPRISE_USER:$ENTREPRISE_USER /var/log/$ENTREPRISE_USER
 # Installer Odoo depuis la source
 echo -e "\n========== Installation du serveur ODOO ==============="
 sudo git clone --depth 1 --branch $ENTREPRISE_VERSION https://www.github.com/odoo/odoo $ENTREPRISE_HOME_EXT/
-sudo pip3 install -r $ENTREPRISE_HOME_EXT/requirements.txt
+sudo pip3 install -r /$ENTREPRISE_HOME_EXT/requirements.txt
 if [ $INSTALL_ENTREPRISE = "True" ]; then
     # Installation d'Odoo Enterprise
     sudo pip3 install psycopg2-binary pdfminer.six
@@ -121,126 +122,122 @@ if [ $INSTALL_ENTREPRISE = "True" ]; then
     sudo ln -s /usr/bin/nodejs /usr/bin/node
     sudo su $ENTREPRISE_USER -c "mkdir $ENTREPRISE_HOME/enterprise"
     sudo su $ENTREPRISE_USER -c "mkdir $ENTREPRISE_HOME/enterprise/addons"
-
-    GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $ENTREPRISE_VERSION https://www.github.com/odoo/enterprise "$ENTREPRISE_HOME/enterprise/addons" 2>&1)
-    while [[ $GITHUB_RESPONSE == *"Authentication"* ]]; do
-        echo "\n============== AVERTISSEMENT ====================="
-        echo "Votre authentification avec Github a échoué ! Veuillez réessayer."
-        printf "Pour cloner et installer la version Enterprise d'Odoo, vous devez être un partenaire officiel d'Odoo et avoir accès à\nhttp://github.com/odoo/enterprise.\n"
-        echo "ASTUCE : Appuyez sur ctrl+c pour arrêter ce script."
-        echo "\n============================================="
-        echo " "
-        GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $ENTREPRISE_VERSION https://www.github.com/odoo/enterprise "$ENTREPRISE_HOME/enterprise/addons" 2>&1)
-    done
-
-    echo -e "\n========= Code Enterprise ajouté sous $ENTREPRISE_HOME/enterprise/addons ========="
-    echo -e "\n============= Installation des bibliothèques spécifiques à Enterprise ============"
-    sudo -H pip3 install num2words ofxparse dbfread ebaysdk firebase_admin pyOpenSSL
-    sudo npm install -g less-plugin-clean-css
-
-    if [ "$ENTREPRISE_VERSION_SPECIFIC" = "14" ]; then
-        echo -e "\n======== Ajout de certains modules entreprise pour Odoo 14 ============="
-        wget https://www.soladrive.com/downloads/enterprise-14.0.tar.gz
-        tar -zxvf enterprise-14.0.tar.gz
-        cp -rf odoo-14.0*/odoo/addons/* ${ENTREPRISE_HOME}/enterprise/addons
-        rm enterprise-14.0.tar.gz
-    elif [ "$ENTREPRISE_VERSION_SPECIFIC" = "15" ]; then
-        echo -e "\n======== Ajout de certains modules entreprise pour Odoo 15 ============="
-        wget https://www.soladrive.com/downloads/enterprise-15.0.tar.gz
-        tar -zxvf enterprise-15.0.tar.gz
-        cp -rf odoo-15.0*/odoo/addons/* ${ENTREPRISE_HOME}/enterprise/addons
-        rm enterprise-15.0.tar.gz
-    fi
-
-    sudo chown -R $ENTREPRISE_USER:$ENTREPRISE_USER ${ENTREPRISE_HOME}/
+    git clone --depth 1 --branch $ENTREPRISE_VERSION https://www.github.com/odoo/enterprise "$ENTREPRISE_HOME/enterprise/addons"
 fi
 
-echo -e "\n========= Création du répertoire des modules personnalisés ============"
-sudo su $ENTREPRISE_USER -c "mkdir $ENTREPRISE_HOME/custom"
-sudo su $ENTREPRISE_USER -c "mkdir $ENTREPRISE_HOME/custom/addons"
+# Configurer les permissions
+echo -e "\n=========== Configurer les permissions du système ================"
+sudo chown -R $ENTREPRISE_USER:$ENTREPRISE_USER $ENTREPRISE_HOME/*
 
-echo -e "\n======= Définir les permissions sur le dossier home =========="
-sudo chown -R $ENTREPRISE_USER:$ENTREPRISE_USER $ENTREPRISE_HOME/
-
-echo -e "\n========== Création du fichier de configuration du serveur ============="
+# Créer le fichier de configuration Odoo
+echo -e "\n=========== Création du fichier de configuration ODOO ================"
 sudo touch /etc/${ENTREPRISE_CONFIG}.conf
-sudo su root -c "printf '[options] \n; This is the password that allows database operations:\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-if [ $GENERATE_RANDOM_PASSWORD = "True" ]; then
-    echo -e "\n========= Génération du mot de passe admin aléatoire ==========="
-    ENTREPRISE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
-fi
-sudo su root -c "printf 'admin_passwd = ${ENTREPRISE_SUPERADMIN}\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-if [ $ENTREPRISE_VERSION > "11.0" ]; then
-    sudo su root -c "printf 'http_port = ${ENTREPRISE_PORT}\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-else
-    sudo su root -c "printf 'xmlrpc_port = ${ENTREPRISE_PORT}\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-fi
-sudo su root -c "printf 'logfile = /var/log/${ENTREPRISE_USER}/${ENTREPRISE_CONFIG}.log\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'addons_path=${ENTREPRISE_HOME_EXT}/addons,${ENTREPRISE_HOME}/custom/addons' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'xmlrpc_interface = 127.0.0.1\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'netrpc_interface = 127.0.0.1\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'dbfilter = ^%d$\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'proxy_mode = True\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'workers = 4\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
-sudo su root -c "printf 'max_cron_threads = 2\n' >> /etc/${ENTREPRISE_CONFIG}.conf"
+sudo su root -c "printf '[options] \n
+; This is the password that allows database operations:\n
+admin_passwd = ${ENTREPRISE_SUPERADMIN} \n
+db_host = False \n
+db_port = False \n
+db_user = ${ENTREPRISE_USER} \n
+db_password = False \n
+addons_path = ${ENTREPRISE_HOME_EXT}/addons,${ENTREPRISE_HOME}/custom/addons \n
+logfile = /var/log/${ENTREPRISE_USER}/${ENTREPRISE_CONFIG}.log\n
+logrotate = True\n
+xmlrpc_interface = 127.0.0.1 \n
+netrpc_interface = 127.0.0.1 \n
+dbfilter = ^0$\n
+proxy_mode = True\n
+workers = 4\n
+max_cron_threads = 2\n' > /etc/${ENTREPRISE_CONFIG}.conf"
 
-echo -e "\n=========== Créer le service Odoo =============="
-sudo touch /etc/systemd/system/$ENTREPRISE_CONFIG.service
-sudo su root -c "printf '[Unit]\nDescription=Odoo\nDocumentation=http://www.odoo.com\n[Service]\n' >> /etc/systemd/system/$ENTREPRISE_CONFIG.service"
-sudo su root -c "printf 'User=$ENTREPRISE_USER\nGroup=$ENTREPRISE_USER\n' >> /etc/systemd/system/$ENTREPRISE_CONFIG.service"
-sudo su root -c "printf 'ExecStart=/usr/bin/python3 $ENTREPRISE_HOME_EXT/odoo-bin -c /etc/${ENTREPRISE_CONFIG}.conf\n' >> /etc/systemd/system/$ENTREPRISE_CONFIG.service"
-sudo su root -c "printf 'StandardOutput=journal+console\n' >> /etc/systemd/system/$ENTREPRISE_CONFIG.service"
-sudo su root -c "printf '[Install]\nWantedBy=multi-user.target\n' >> /etc/systemd/system/$ENTREPRISE_CONFIG.service"
+# Créer le service système Odoo
+echo -e "* Creating systemd service file"
+sudo touch /etc/systemd/system/$ENTREPRISE_USER.service
+sudo su root -c "echo '[Unit]
+Description=Odoo
+Documentation=http://www.odoo.com
+[Service]
+# Ubuntu/Debian convention:
+Type=simple
+User=$ENTREPRISE_USER
+ExecStart=/usr/bin/python3 $ENTREPRISE_HOME_EXT/odoo-bin -c /etc/${ENTREPRISE_CONFIG}.conf
+[Install]
+WantedBy=default.target' > /etc/systemd/system/$ENTREPRISE_USER.service"
+
+echo -e "* Starting Odoo Service"
 sudo systemctl daemon-reload
-sudo systemctl enable $ENTREPRISE_CONFIG
-sudo systemctl start $ENTREPRISE_CONFIG
+sudo systemctl start $ENTREPRISE_USER.service
+sudo systemctl enable $ENTREPRISE_USER.service
 
+# Installer et configurer Nginx
 if [ $INSTALL_NGINX = "True" ]; then
-    echo -e "\n================ Installation de Nginx =================="
+    echo -e "\n* Installing and configuring Nginx"
     sudo apt install -y nginx
-    sudo rm /etc/nginx/sites-enabled/default
-    sudo rm /etc/nginx/sites-available/default
-    sudo touch /etc/nginx/sites-available/$ENTREPRISE_USER
+    cat <<EOF | sudo tee /etc/nginx/sites-available/$ENTREPRISE_USER
+server {
+    listen 80;
+    server_name $WEBSITE_NAME;
+
+    proxy_buffers 16 64k;
+    proxy_buffer_size 128k;
+
+    proxy_read_timeout 900s;
+    proxy_connect_timeout 900s;
+    proxy_send_timeout 900s;
+
+    client_max_body_size 0;
+
+    gzip on;
+    gzip_min_length 1100;
+    gzip_buffers 4 32k;
+    gzip_types text/plain application/x-javascript text/xml text/css;
+    gzip_vary on;
+    gzip_disable "MSIE [1-6]\.(?!.*SV1)";
+
+    location / {
+        proxy_pass http://127.0.0.1:$ENTREPRISE_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location ~* /web/static/ {
+        proxy_cache_valid 200 90m;
+        proxy_buffering on;
+        expires 864000;
+        proxy_pass http://127.0.0.1:$ENTREPRISE_PORT;
+    }
+
+    # common gzip
+    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+    gzip on;
+}
+EOF
+
     sudo ln -s /etc/nginx/sites-available/$ENTREPRISE_USER /etc/nginx/sites-enabled/$ENTREPRISE_USER
-    sudo su root -c "printf 'server {\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    listen 80;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    server_name $WEBSITE_NAME;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_read_timeout 720s;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_connect_timeout 720s;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_send_timeout 720s;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_set_header X-Forwarded-Host \$host;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_set_header X-Forwarded-Proto \$scheme;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    proxy_set_header X-Real-IP \$remote_addr;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    add_header Strict-Transport-Security max-age=15768000;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    location / {\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        proxy_pass http://127.0.0.1:$ENTREPRISE_PORT;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    }\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    location /longpolling {\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        proxy_pass http://127.0.0.1:$LONGPOLLING_PORT;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    }\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    location ~* /web/static/ {\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        proxy_cache_valid 200 90m;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        proxy_buffering on;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        expires 864000;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '        proxy_pass http://127.0.0.1:$ENTREPRISE_PORT;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    }\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '    gzip on;\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
-    sudo su root -c "printf '}\n' >> /etc/nginx/sites-available/$ENTREPRISE_USER"
+    sudo rm /etc/nginx/sites-enabled/default
     sudo systemctl restart nginx
 fi
 
+# Configurer SSL avec Let's Encrypt
 if [ $ENABLE_SSL = "True" ]; then
-    echo -e "\n============ Installation de Certbot pour SSL ============="
-    sudo apt install certbot python3-certbot-nginx -y
-    sudo certbot --nginx -d $WEBSITE_NAME --non-interactive --agree-tos --email $ADMIN_EMAIL
-    sudo systemctl reload nginx
+    sudo apt install -y certbot python3-certbot-nginx
+    sudo certbot --nginx -d $WEBSITE_NAME --non-interactive --agree-tos -m $ADMIN_EMAIL
 fi
 
-echo -e "\n==== Installation terminée ! ===="
+# Configurer UFW (Uncomplicated Firewall)
+echo -e "\n========== Configurer UFW (Uncomplicated Firewall) ============"
+sudo apt install -y ufw
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw allow 8069/tcp
+sudo ufw allow 8072/tcp
+sudo ufw --force enable
+
 echo "-----------------------------------------------------------"
-echo "Odoo a été installé avec succès sur votre système."
-echo "URL: http://$WEBSITE_NAME"
-echo "Mot de passe admin: $ENTREPRISE_SUPERADMIN"
+echo "Installation complète de Odoo"
+echo "-----------------------------------------------------------"
+echo "Vous pouvez maintenant accéder à votre instance Odoo via l'adresse IP de votre serveur ou le nom de domaine que vous avez configuré."
+echo "Nom d'utilisateur système: $ENTREPRISE_USER"
+echo "Port Odoo: $ENTREPRISE_PORT"
 echo "-----------------------------------------------------------"
