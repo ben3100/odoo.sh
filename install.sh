@@ -24,7 +24,7 @@ read -p "Entrez le nom du site web pour la configuration Nginx (ex: example.com)
 read -p "Entrez la version d'Odoo à installer (ex: 16.0, 17.0): " ENTREPRISE_VERSION
 read -p "Voulez-vous installer la version entreprise d'Odoo ? (True/False): " INSTALL_ENTREPRISE
 
-if [ "$INSTALL_ENTREPRISE" = "True" ]; alors
+if [ "$INSTALL_ENTREPRISE" = "True" ]; then
     read -p "Entrez la version entreprise d'Odoo à installer (14 ou 15): " ENTREPRISE_VERSION_SPECIFIC
 fi
 
@@ -91,7 +91,7 @@ sudo npm install -g less less-plugin-clean-css
 sudo npm install -g rtlcss node-gyp
 
 # Installer Wkhtmltopdf si nécessaire
-if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
+if [ "$INSTALL_WKHTMLTOPDF" = "True" ]; then
 echo -e "\n---- Installation de wkhtmltopdf et placement des raccourcis au bon endroit pour ODOO ----"
   sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb 
   sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
@@ -114,8 +114,8 @@ sudo chown -R $ENTREPRISE_USER:$ENTREPRISE_USER /var/log/$ENTREPRISE_USER
 # Installer Odoo depuis la source
 echo -e "\n========== Installation du serveur ODOO ==============="
 sudo git clone --depth 1 --branch $ENTREPRISE_VERSION https://www.github.com/odoo/odoo $ENTREPRISE_HOME_EXT/
-sudo pip3 install -r /$ENTREPRISE_HOME_EXT/requirements.txt
-if [ $INSTALL_ENTREPRISE = "True" ]; then
+sudo pip3 install -r $ENTREPRISE_HOME_EXT/requirements.txt
+if [ "$INSTALL_ENTREPRISE" = "True" ]; then
     # Installation d'Odoo Enterprise
     sudo pip3 install psycopg2-binary pdfminer.six
     echo -e "\n============ Création de lien symbolique pour node ==============="
@@ -167,6 +167,7 @@ echo -e "* Starting Odoo Service"
 sudo systemctl daemon-reload
 sudo systemctl start $ENTREPRISE_USER.service
 sudo systemctl enable $ENTREPRISE_USER.service
+
 
 # Installer et configurer Nginx
 if [ $INSTALL_NGINX = "True" ]; then
